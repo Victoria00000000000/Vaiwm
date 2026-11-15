@@ -1,0 +1,97 @@
+import { useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { FaXmark } from 'react-icons/fa6'
+
+/**
+ * ImageLightbox – renders a full-screen overlay for a single gallery item.
+ *
+ * Props:
+ *   item     – { image, title, category? } | null
+ *   onClose  – function called when the user closes the lightbox
+ */
+export default function ImageLightbox({ item, onClose }) {
+  // Close on Escape key
+  useEffect(() => {
+    if (!item) return
+    const handleKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [item, onClose])
+
+  // Prevent body scroll when open
+  useEffect(() => {
+    document.body.style.overflow = item ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [item])
+
+  return (
+    <AnimatePresence>
+      {item && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4 md:p-8"
+          onClick={onClose}
+          role="dialog"
+          aria-modal="true"
+          aria-label={item.title}
+        >
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            aria-label="Close image preview"
+            className="absolute top-5 right-5 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-gold hover:text-green-900 transition-colors duration-200"
+          >
+            <FaXmark size={22} />
+          </button>
+
+          {/* Media container */}
+          <motion.div
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.92, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-4xl w-full max-h-[92vh] rounded-2xl overflow-hidden shadow-2xl bg-black flex flex-col justify-center"
+          >
+            {item.type === 'video' || item.video ? (
+              <video
+                src={item.video}
+                controls
+                autoPlay
+                playsInline
+                className="w-full max-h-[75vh] object-contain bg-black"
+              />
+            ) : (
+              <img
+                src={item.image}
+                alt={item.title}
+                className="w-full h-full object-contain max-h-[82vh]"
+              />
+            )}
+            {/* Caption bar */}
+            {item.title && (
+              <div className="w-full bg-gradient-to-t from-black via-black/95 to-black/75 px-6 py-4 border-t border-white/10">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <p className="text-white font-semibold text-base sm:text-lg leading-snug">{item.title}</p>
+                    {item.description && (
+                      <p className="text-white/75 text-xs sm:text-sm mt-1 leading-relaxed">{item.description}</p>
+                    )}
+                  </div>
+                  {item.category && (
+                    <span className="self-start sm:self-auto shrink-0 text-gold-300 text-[11px] uppercase tracking-widest font-semibold px-3 py-1 rounded-full bg-gold/15 border border-gold/30">
+                      {item.category}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
