@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import emailjs from '@emailjs/browser'
 import { FaLocationDot, FaWhatsapp, FaEnvelope, FaCircleCheck, FaPaperPlane, FaFacebookF, FaInstagram, FaXTwitter } from 'react-icons/fa6'
 import PageHero from '../components/common/PageHero'
 import SectionHeading from '../components/common/SectionHeading'
@@ -25,21 +26,9 @@ function OfficeCard({ office, delay }) {
           </p>
           <p className="flex items-center gap-3">
             <FaEnvelope className="text-gold-500 shrink-0" />
-            <Link
-  to="/contact#contact-form"
-  className="hover:text-green"
-  onClick={(e) => {
-    e.preventDefault();
-    const el = document.getElementById('contact-form');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-    // Update URL hash without navigation
-    window.history.replaceState(null, '', '/contact#contact-form');
-  }}
->
-  Send us an email
-</Link>
+            <Link to="/contact#get-in-touch" className="hover:text-green-700 transition-colors">
+              Contact us on Gmail
+            </Link>
           </p>
         </div>
       </div>
@@ -48,9 +37,22 @@ function OfficeCard({ office, delay }) {
 }
 
 export default function Contact() {
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' })
   const [errors, setErrors] = useState({})
   const [submitted, setSubmitted] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState(null)
+  const formRef = useRef(null)
+  const { hash } = useLocation()
+
+  useEffect(() => {
+    if (hash === '#get-in-touch') {
+      const el = document.getElementById('get-in-touch')
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+      }
+    }
+  }, [hash])
 
   const validate = () => {
     const newErrors = {}
@@ -59,11 +61,6 @@ export default function Contact() {
       newErrors.email = 'Email address is required.'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Enter a valid email address.'
-    }
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required.'
-    } else if (!/^[+\d][\d\s-]{6,}$/.test(formData.phone.trim())) {
-      newErrors.phone = 'Enter a valid phone number.'
     }
     if (!formData.message.trim()) newErrors.message = 'Please include a message.'
     return newErrors
@@ -76,17 +73,31 @@ export default function Contact() {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const newErrors = validate()
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
     }
-    // Placeholder: integrate with backend/email service here.
-    setSubmitted(true)
-    setFormData({ name: '', email: '', phone: '', message: '' })
-    setErrors({})
+    setSending(true)
+    setSendError(null)
+    try {
+      await emailjs.sendForm(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        formRef.current,
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      )
+      setSubmitted(true)
+      setFormData({ name: '', email: '', message: '' })
+      setErrors({})
+    } catch (err) {
+      console.error('EmailJS error:', err)
+      setSendError('Something went wrong. Please try again or reach out directly via Gmail.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -107,7 +118,7 @@ export default function Contact() {
       </section>
 
       {/* Contact Form */}
-      <section className="section-pad bg-white">
+      <section id="get-in-touch" className="section-pad bg-white">
         <div className="container-page grid lg:grid-cols-2 gap-12">
           <Reveal className="flex flex-col h-full justify-between">
             <div>
@@ -158,7 +169,11 @@ export default function Contact() {
                 </button>
               </div>
             ) : (
-              <form id="contact-form" onSubmit={handleSubmit} className="space-y-5" noValidate>
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-5" noValidate>
+                {/* Hidden fields mapped to EmailJS template variables */}
+                <input type="hidden" name="from_name" value={formData.name} />
+                <input type="hidden" name="from_email" value={formData.email} />
+                <input type="hidden" name="message" value={formData.message} />
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-green-900 mb-1.5">
                     Full Name
@@ -208,30 +223,6 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-green-900 mb-1.5">
-                    Phone Number
-                  </label>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    aria-invalid={!!errors.phone}
-                    aria-describedby={errors.phone ? 'phone-error' : undefined}
-                    className={`w-full px-4 py-3 rounded-xl border ${
-                      errors.phone ? 'border-red-400' : 'border-green-100'
-                    } focus:border-green outline-none transition-colors`}
-                    placeholder="+234 800 000 0000"
-                  />
-                  {errors.phone && (
-                    <p id="phone-error" className="text-red-500 text-xs mt-1.5">
-                      {errors.phone}
-                    </p>
-                  )}
-                </div>
-
-                <div>
                   <label htmlFor="message" className="block text-sm font-medium text-green-900 mb-1.5">
                     Message
                   </label>
@@ -255,8 +246,11 @@ export default function Contact() {
                   )}
                 </div>
 
-                <button type="submit" className="btn-primary w-full sm:w-auto">
-                  Send Message <FaPaperPlane size={14} />
+                {sendError && (
+                  <p className="text-red-500 text-sm">{sendError}</p>
+                )}
+                <button type="submit" className="btn-primary w-full sm:w-auto" disabled={sending}>
+                  {sending ? 'Sending…' : <> Send Message <FaPaperPlane size={14} /></>}
                 </button>
               </form>
             )}

@@ -76,10 +76,10 @@ export default function Footer() {
                   </a>
                 </p>
                 <p className="flex items-center gap-2 text-white/65">
-                                          <FaEnvelope className="shrink-0" />
-            <a href="/contact#contact-form" className="hover:text-gold transition-colors">
-              Send us an email
-            </a>
+                  <FaEnvelope className="shrink-0" />
+                  <Link to="/contact#get-in-touch" className="hover:text-emerald-300 transition-colors">
+                    Contact us on Gmail
+                  </Link>
                 </p>
               </div>
             ))}

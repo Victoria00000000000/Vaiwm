@@ -199,7 +199,7 @@ export const team = {
 export const offices = [
   {
     country: 'Nigeria Office',
-    address: ' Akure, Nigeria',
+    address: 'Akure, Nigeria',
     phone: '+234 80 XXXXXXXXX',
     email: 'victoriaalabaster007@gmail.com',
   },

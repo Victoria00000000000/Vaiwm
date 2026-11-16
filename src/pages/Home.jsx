@@ -82,7 +82,7 @@ export default function Home() {
           />
         </AnimatePresence>
 
-        <div className="container-page grid lg:grid-cols-2 gap-10 items-start lg:items-center min-h-[640px] md:min-h-[720px] pt-24 pb-12 md:pt-28 lg:py-0">
+        <div className="container-page grid lg:grid-cols-2 gap-10 items-start lg:items-center min-h-[640px] md:min-h-[720px] pt-32 pb-12 md:pt-36 lg:pt-36 lg:pb-16">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentSlide}
@@ -90,7 +90,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -24 }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="relative z-10 mt-16 sm:mt-20 lg:mt-0"
+              className="relative z-10"
             >
               <span className="eyebrow drop-shadow-md" style={{ color: '#ffffff' }}>Victoria-Alabaster International Women Ministry</span>
               <h1 className="font-display font-semibold text-4xl sm:text-5xl md:text-6xl text-white mt-4 leading-[1.08] text-balance drop-shadow-md">
